@@ -8,3 +8,13 @@ libs = ["lib"]
 fs_permissions = [
     { access = "read", path = "lib/foundry-chainlink-toolkit/out" },
 ]
+
+[rpc_endpoints]
+sepolia = "${SEPOLIA_RPC_URL}"
+mumbai = "${MUMBAI_RPC_URL}"
+arbitrum = "${ARBITRUM_RPC_URL}"
+
+[etherscan]
+sepolia = { key = "${SEPOLIA_ETHERSCAN_API_KEY}" }
+mumbai = { key = "${POLYGONSCAN_API_KEY}" }
+arbitrum = { key = "${ARBISCAN_API_KEY}" }
