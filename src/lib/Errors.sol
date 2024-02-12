@@ -6,4 +6,7 @@ library Errors {
     error ZeroAddress();
     error NotFromMailbox(address _sender);
     error FromUnknownRouter(uint32 _origin, bytes32 _sender);
+    error AlreadyEnrolled(uint32 _domain);
+    error InvalidInputLength();
+    error RouterNotEnrolled(uint32 _domain);
 }
