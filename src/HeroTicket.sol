@@ -7,7 +7,7 @@ import {ERC721, ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/ext
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Errors} from "./lib/Errors.sol";
 
-contract HeroTicketNft is ERC721URIStorage, Ownable, IMessageRecipient {
+contract HeroTicket is ERC721URIStorage, Ownable, IMessageRecipient {
     address public immutable MAILBOX;
     uint256 public tokenId;
 

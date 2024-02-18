@@ -7,7 +7,7 @@ import {TypeCasts} from "@hyperlane-v3/contracts/libs/TypeCasts.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Errors} from "./lib/Errors.sol";
 
-contract HeroTicketNftRouter is Ownable, IRouter {
+contract HeroTicketRouter is Ownable, IRouter {
     address public immutable MAILBOX;
 
     uint32[] private _nftDomains;
