@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.23;
 
-import {IManager} from "./interfaces/IManager.sol";
+import {IHeroTicketRouter} from "./interfaces/IHeroTicketRouter.sol";
 import {IEventMetadata} from "./events/interfaces/IEventMetadata.sol";
 import {Event} from "./events/Event.sol";
 import {FCFSEvent} from "./events/FCFSEvent.sol";
@@ -10,11 +10,16 @@ import {Validations} from "./libs/Validations.sol";
 import {Errors} from "./libs/Errors.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Manager is IManager, Ownable {
+contract HeroTicketRouter is IHeroTicketRouter, Ownable {
+    address public immutable MAILBOX;
+
     mapping(address => bool) public whitelisted;
     mapping(address => uint256) public saleBalances;
     mapping(address => bool) public eventCreated;
     address[] public events;
+
+    uint32[] private _domains;
+    mapping(uint32 => bytes32) public override routers;
 
     /**
      * @dev Modifier to check if the caller is whitelisted
@@ -27,12 +32,82 @@ contract Manager is IManager, Ownable {
     }
 
     /**
+     * @dev Modifier to check if the caller is the mailbox
+     */
+    modifier onlyMailbox() {
+        if (msg.sender != MAILBOX) {
+            revert Errors.NotFromMailbox(msg.sender);
+        }
+        _;
+    }
+
+    /**
      * @dev Constructor
      * @notice The deployer of this contract is whitelisted by default
      */
-    constructor() Ownable() {
+    constructor(address _mailbox) Ownable() {
+        MAILBOX = _mailbox;
         whitelisted[msg.sender] = true;
     }
+
+    // ============ Cross-Chain Router ============
+
+    /**
+     * @dev Get the list of enrolled domains
+     * @return array of enrolled domains
+     */
+    function domains() external view override returns (uint32[] memory) {
+        return _domains;
+    }
+
+    /**
+     * @dev Enroll a remote router
+     * @param _domain domain of the remote router
+     * @param _router address of the remote router
+     * @notice Only the owner can call this function
+     */
+    function enrollRemoteRouter(
+        uint32 _domain,
+        bytes32 _router
+    ) external override onlyOwner {
+        _enrollRemoteRouter(_domain, _router);
+    }
+
+    /**
+     * @dev Enroll multiple remote routers
+     * @param domains_ array of domains of the remote routers
+     * @param _routers array of addresses of the remote routers
+     * @notice Only the owner can call this function
+     */
+    function enrollRemoteRouters(
+        uint32[] calldata domains_,
+        bytes32[] calldata _routers
+    ) external override onlyOwner {
+        if (domains_.length != _routers.length) {
+            revert Errors.InvalidInputLength();
+        }
+
+        for (uint256 i = 0; i < domains_.length; i++) {
+            _enrollRemoteRouter(domains_[i], _routers[i]);
+        }
+    }
+
+    /**
+     * @dev Enroll a remote router
+     * @param _domain domain of the remote router
+     * @param _router address of the remote router
+     */
+    function _enrollRemoteRouter(uint32 _domain, bytes32 _router) internal {
+        if (routers[_domain] != bytes32(0)) {
+            revert Errors.AlreadyEnrolled(_domain);
+        }
+        routers[_domain] = _router;
+        _domains.push(_domain);
+
+        emit RemoteRouterEnroll(_domain, _router);
+    }
+
+    // ============ Event Management ============
 
     /**
      * @dev Set the whitelisted status of an address
@@ -149,16 +224,16 @@ contract Manager is IManager, Ownable {
         uint32 _eventEndAt
     ) internal {
         // Validate inputs
-        Validations.validateStringNotEmpty(_eventName);
-        Validations.validateStringNotEmpty(_eventDescription);
-        Validations.validateStringNotEmpty(_ticketURI);
-        Validations.validateNumberNotZero(_ticketPrice);
-        Validations.validateNumberNotZero(_maxTickets);
-        Validations.validateTimeAfterNow(_saleStartAt);
-        Validations.validateGreaterThan(_saleEndAt, _saleStartAt);
-        Validations.validateGreaterThan(_drawAt, _saleEndAt);
-        Validations.validateGreaterThan(_eventStartAt, _drawAt);
-        Validations.validateGreaterThan(_eventEndAt, _eventStartAt);
+        Validations.mustNotEmpty(_eventName);
+        Validations.mustNotEmpty(_eventDescription);
+        Validations.mustNotEmpty(_ticketURI);
+        Validations.mustNotZero(_ticketPrice);
+        Validations.mustNotZero(_maxTickets);
+        Validations.mustAfterNow(_saleStartAt);
+        Validations.mustGreaterThan(_saleEndAt, _saleStartAt);
+        Validations.mustGreaterThan(_drawAt, _saleEndAt);
+        Validations.mustGreaterThan(_eventStartAt, _drawAt);
+        Validations.mustGreaterThan(_eventEndAt, _eventStartAt);
 
         // Create the event
         RaffleEvent event_ = new RaffleEvent(
@@ -210,15 +285,15 @@ contract Manager is IManager, Ownable {
         uint32 _eventEndAt
     ) internal {
         // Validate inputs
-        Validations.validateStringNotEmpty(_eventName);
-        Validations.validateStringNotEmpty(_eventDescription);
-        Validations.validateStringNotEmpty(_ticketURI);
-        Validations.validateGreaterThan(_ticketPrice, 0);
-        Validations.validateGreaterThan(_maxTickets, 0);
-        Validations.validateTimeAfterNow(_saleStartAt);
-        Validations.validateGreaterThan(_saleEndAt, _saleStartAt);
-        Validations.validateGreaterThan(_eventStartAt, _saleEndAt);
-        Validations.validateGreaterThan(_eventEndAt, _eventStartAt);
+        Validations.mustNotEmpty(_eventName);
+        Validations.mustNotEmpty(_eventDescription);
+        Validations.mustNotEmpty(_ticketURI);
+        Validations.mustGreaterThan(_ticketPrice, 0);
+        Validations.mustGreaterThan(_maxTickets, 0);
+        Validations.mustAfterNow(_saleStartAt);
+        Validations.mustGreaterThan(_saleEndAt, _saleStartAt);
+        Validations.mustGreaterThan(_eventStartAt, _saleEndAt);
+        Validations.mustGreaterThan(_eventEndAt, _eventStartAt);
 
         // Create the event
         FCFSEvent event_ = new FCFSEvent(
@@ -258,10 +333,10 @@ contract Manager is IManager, Ownable {
         uint32 _eventEndAt
     ) internal {
         // Validate inputs
-        Validations.validateStringNotEmpty(_eventName);
-        Validations.validateStringNotEmpty(_eventDescription);
-        Validations.validateTimeAfterNow(_eventStartAt);
-        Validations.validateGreaterThan(_eventEndAt, _eventStartAt);
+        Validations.mustNotEmpty(_eventName);
+        Validations.mustNotEmpty(_eventDescription);
+        Validations.mustAfterNow(_eventStartAt);
+        Validations.mustGreaterThan(_eventEndAt, _eventStartAt);
 
         // Create the event
         Event event_ = new Event(

@@ -9,9 +9,7 @@ interface IFCFSEvent is IEventMetadata {
 
     // direct interaction
     function buyTicket() external payable;
-    function refund() external;
 
     // cross-chain functionality through manager
     function issueTicket(address _to) external;
-    function burnTicket(uint256 _tokenId) external;
 }

@@ -1,25 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.23;
 
-import {IEventMetadata} from "./interfaces/IEventMetadata.sol";
+import {EventMetadata} from "./EventMetadata.sol";
 
-contract Event is IEventMetadata {
+contract Event is EventMetadata {
     error OnlyManager();
     error OnlyHost();
-
-    uint8 public override eventType;
-    address public override manager;
-
-    address public override host;
-    string public override eventName;
-    string public override eventDescription;
-    uint256 public override ticketPrice;
-    uint256 public override maxTickets;
-    uint32 public override saleStartAt;
-    uint32 public override saleEndAt;
-    uint32 public override drawAt;
-    uint32 public override eventStartAt;
-    uint32 public override eventEndAt;
 
     modifier onlyManager() {
         if (msg.sender != manager) {
@@ -47,7 +33,7 @@ contract Event is IEventMetadata {
         uint32 _eventStartAt,
         uint32 _eventEndAt
     ) {
-        eventType = uint8(IEventMetadata.Type.FREE);
+        eventType = uint8(Type.FREE);
         manager = msg.sender;
 
         host = _host;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.23;
 
-import {IEventMetadata, Event} from "./Event.sol";
+import {Event} from "./Event.sol";
 import {IRaffleEvent} from "./interfaces/IRaffleEvent.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
@@ -43,7 +43,7 @@ contract RaffleEvent is Event, IRaffleEvent, ERC721 {
         )
         ERC721(_name, _symbol)
     {
-        eventType = uint8(IEventMetadata.Type.RAFFLE);
+        eventType = uint8(Type.RAFFLE);
         _ticketURI = ticketURI_;
     }
 
@@ -53,40 +53,13 @@ contract RaffleEvent is Event, IRaffleEvent, ERC721 {
      */
     function enter() public payable {
         address _applicant = msg.sender;
+        uint256 value = msg.value;
 
-        if (applied[_applicant]) {
-            revert AlreadyApplied();
-        }
-
-        uint32 now_ = uint32(block.timestamp);
-
-        if (now_ < saleStartAt || now_ > saleEndAt) {
-            revert NotApplicable();
-        }
-
-        if (msg.value < ticketPrice) {
+        if (value < ticketPrice) {
             revert InsufficientPayment();
         }
 
-        totalApplicants += 1;
-        _applicantId += 1;
-        applied[_applicant] = true;
-        applicantNumber[_applicant] = _applicantId;
-    }
-
-    /**
-     * @dev Refund the ticket price
-     * @notice The applicant can refund the ticket price if the raffle is not yet drawn
-     */
-    function refund() public {
-        // TODO: Implement logic for refund
-    }
-
-    /**
-     * @dev Draw the raffle
-     */
-    function draw() public {
-        // TODO: Implement logic for random draw
+        _addApplicant(_applicant);
     }
 
     /**
@@ -95,20 +68,50 @@ contract RaffleEvent is Event, IRaffleEvent, ERC721 {
      * @notice Only the manager can add an applicant
      */
     function addApplicant(address _applicant) public onlyManager {
-        if (applied[_applicant]) {
-            revert AlreadyApplied();
-        }
+        _addApplicant(_applicant);
+    }
 
-        uint32 now_ = uint32(block.timestamp);
-
-        if (now_ < saleStartAt || now_ > saleEndAt) {
-            revert NotApplicable();
-        }
+    /**
+     * @dev add an applicant to the raffle
+     * @param _applicant address of the applicant
+     */
+    function _addApplicant(address _applicant) internal {
+        _checkTicketSale();
+        _checkApplied(_applicant);
 
         totalApplicants += 1;
         _applicantId += 1;
         applied[_applicant] = true;
         applicantNumber[_applicant] = _applicantId;
+    }
+
+    /**
+     * @dev Check if the ticket is on sale
+     */
+    function _checkTicketSale() internal view {
+        uint32 now_ = uint32(block.timestamp);
+        if (now_ < saleStartAt || now_ > saleEndAt) {
+            revert NotOnSale();
+        }
+    }
+
+    /**
+     * @dev Check if the applicant has already applied
+     * @param _applicant address of the applicant
+     */
+    function _checkApplied(address _applicant) internal view {
+        if (applied[_applicant]) {
+            revert AlreadyApplied();
+        }
+    }
+
+    /**
+     * @dev Draw the raffle
+     * @param _randomNumber uint256 random number to draw the raffle
+     * @notice Only the manager can draw the raffle
+     */
+    function draw(uint256 _randomNumber) public onlyManager {
+        // TODO: Implement logic for random draw
     }
 
     /**

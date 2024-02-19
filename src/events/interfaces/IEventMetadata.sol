@@ -12,6 +12,8 @@ interface IEventMetadata {
     error InsufficientPayment();
     error NotApplied();
     error NotRefundable();
+    error HostCannotBuyTicket();
+    error ZeroAddress();
 
     enum Type {
         FREE,

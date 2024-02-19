@@ -16,10 +16,8 @@ interface IRaffleEvent is IEventMetadata {
 
     // direct interaction
     function enter() external payable;
-    function refund() external;
-    function draw() external;
 
     // cross-chain functionality through manager
     function addApplicant(address _applicant) external;
-    function removeApplicant(address _applicant) external;
+    function draw(uint256 _randomNumber) external;
 }
