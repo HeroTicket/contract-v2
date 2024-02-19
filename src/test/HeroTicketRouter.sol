@@ -3,12 +3,15 @@ pragma solidity ^0.8.23;
 
 import {IMailbox} from "@hyperlane-v3/contracts/interfaces/IMailbox.sol";
 import {IRouter} from "@hyperlane-v3/contracts/interfaces/IRouter.sol";
+import {IPostDispatchHook} from "@hyperlane-v3/contracts/interfaces/hooks/IPostDispatchHook.sol";
+import {StandardHookMetadata} from "@hyperlane-v3/contracts/hooks/libs/StandardHookMetadata.sol";
 import {TypeCasts} from "@hyperlane-v3/contracts/libs/TypeCasts.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Errors} from "./lib/Errors.sol";
+import {Errors} from "../libs/Errors.sol";
 
 contract HeroTicketRouter is Ownable, IRouter {
     address public immutable MAILBOX;
+    address public immutable GAS_PAYMASTER;
 
     uint32[] private _nftDomains;
     mapping(uint32 => bytes32) private _nftRouters;
@@ -16,8 +19,9 @@ contract HeroTicketRouter is Ownable, IRouter {
     event RemoteRouterEnroll(uint32 indexed domain, bytes32 indexed router);
     event SendNft(uint32 indexed domain, address indexed to, string tokenURI);
 
-    constructor(address _mailbox) Ownable() {
+    constructor(address _mailbox, address _gasPaymaster) Ownable() {
         MAILBOX = _mailbox;
+        GAS_PAYMASTER = _gasPaymaster;
     }
 
     function domains() external view override returns (uint32[] memory) {
@@ -69,7 +73,9 @@ contract HeroTicketRouter is Ownable, IRouter {
         IMailbox(MAILBOX).dispatch{value: msg.value}(
             _domainId,
             recipientAddress,
-            messageBody
+            messageBody,
+            bytes(""), // TODO: Add custom hook metadata
+            IPostDispatchHook(GAS_PAYMASTER)
         );
 
         emit SendNft(_domainId, _to, _tokenURI);

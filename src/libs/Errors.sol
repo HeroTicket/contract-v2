@@ -9,4 +9,6 @@ library Errors {
     error AlreadyEnrolled(uint32 _domain);
     error InvalidInputLength();
     error RouterNotEnrolled(uint32 _domain);
+    error NotWhitelisted();
+    error InvalidEventType(uint8 _eventType);
 }

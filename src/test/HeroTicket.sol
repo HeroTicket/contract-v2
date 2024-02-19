@@ -5,7 +5,7 @@ import {IMessageRecipient} from "@hyperlane-v3/contracts/interfaces/IMessageReci
 import {TypeCasts} from "@hyperlane-v3/contracts/libs/TypeCasts.sol";
 import {ERC721, ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Errors} from "./lib/Errors.sol";
+import {Errors} from "../libs/Errors.sol";
 
 contract HeroTicket is ERC721URIStorage, Ownable, IMessageRecipient {
     address public immutable MAILBOX;
