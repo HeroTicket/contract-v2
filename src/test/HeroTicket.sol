@@ -25,10 +25,7 @@ contract HeroTicket is ERC721URIStorage, Ownable, IMessageRecipient {
         MAILBOX = _mailbox;
     }
 
-    function setRouter(
-        uint32 _routerOrigin,
-        address _routerAddress
-    ) external onlyOwner {
+    function setRouter(uint32 _routerOrigin, address _routerAddress) external onlyOwner {
         if (_routerOrigin == 0) {
             revert Errors.InvalidOrigin(_routerOrigin);
         }
@@ -41,19 +38,12 @@ contract HeroTicket is ERC721URIStorage, Ownable, IMessageRecipient {
         routerAddress = _routerAddress;
     }
 
-    function handle(
-        uint32 _origin,
-        bytes32 _sender,
-        bytes calldata _message
-    ) external payable onlyMailbox {
+    function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable onlyMailbox {
         if (!_isRouter(_origin, _sender)) {
             revert Errors.FromUnknownRouter(_origin, _sender);
         }
 
-        (address _to, string memory _tokenURI) = abi.decode(
-            _message,
-            (address, string)
-        );
+        (address _to, string memory _tokenURI) = abi.decode(_message, (address, string));
 
         uint256 _tokenId = ++tokenId;
 
@@ -61,10 +51,7 @@ contract HeroTicket is ERC721URIStorage, Ownable, IMessageRecipient {
         _setTokenURI(_tokenId, _tokenURI);
     }
 
-    function _isRouter(
-        uint32 _origin,
-        bytes32 _sender
-    ) internal view returns (bool) {
+    function _isRouter(uint32 _origin, bytes32 _sender) internal view returns (bool) {
         if (_origin != routerOrigin) {
             return false;
         }

@@ -28,11 +28,7 @@ contract BasicTest is Test {
     function testSendMessage() public {
         string memory message = "Hello, World!";
 
-        originMailbox.dispatch(
-            destination,
-            TypeCasts.addressToBytes32(address(recipient)),
-            bytes(message)
-        );
+        originMailbox.dispatch(destination, TypeCasts.addressToBytes32(address(recipient)), bytes(message));
 
         destinationMailbox.processNextInboundMessage();
         assertEq(string(recipient.lastData()), message);
@@ -51,72 +47,40 @@ contract RouterTest is Test {
     function setUp() public {
         environment = new MockHyperlaneEnvironment(origin, destination);
 
-        originApp = new TestCrosschainApp(
-            address(environment.mailboxes(origin))
-        );
-        destinationApp = new TestCrosschainApp(
-            address(environment.mailboxes(destination))
-        );
+        originApp = new TestCrosschainApp(address(environment.mailboxes(origin)));
+        destinationApp = new TestCrosschainApp(address(environment.mailboxes(destination)));
 
-        originApp.enrollRemoteRouter(
-            destination,
-            TypeCasts.addressToBytes32(address(destinationApp))
-        );
-        destinationApp.enrollRemoteRouter(
-            origin,
-            TypeCasts.addressToBytes32(address(originApp))
-        );
+        originApp.enrollRemoteRouter(destination, TypeCasts.addressToBytes32(address(destinationApp)));
+        destinationApp.enrollRemoteRouter(origin, TypeCasts.addressToBytes32(address(originApp)));
 
         originApp.interchainSecurityModule();
     }
 
     function test_SendMessageFromOrigin() public {
         vm.expectEmit(true, true, true, false);
-        emit TestCrosschainApp.MessageSent(
-            destination,
-            address(originApp),
-            "Hello, World!"
-        );
+        emit TestCrosschainApp.MessageSent(destination, address(originApp), "Hello, World!");
 
         originApp.sendMessage(destination, "Hello, World!");
 
         vm.expectEmit(true, true, true, false);
-        emit TestCrosschainApp.MessageReceived(
-            origin,
-            address(originApp),
-            "Hello, World!"
-        );
+        emit TestCrosschainApp.MessageReceived(origin, address(originApp), "Hello, World!");
 
         environment.processNextPendingMessage();
 
-        assertEq(
-            destinationApp.lastMessages(address(originApp)),
-            "Hello, World!"
-        );
+        assertEq(destinationApp.lastMessages(address(originApp)), "Hello, World!");
     }
 
     function test_SendMessageFromDestination() public {
         vm.expectEmit(true, true, true, false);
-        emit TestCrosschainApp.MessageSent(
-            origin,
-            address(destinationApp),
-            "Hello, World!"
-        );
+        emit TestCrosschainApp.MessageSent(origin, address(destinationApp), "Hello, World!");
 
         destinationApp.sendMessage(origin, "Hello, World!");
 
         vm.expectEmit(true, true, true, false);
-        emit TestCrosschainApp.MessageReceived(
-            destination,
-            address(destinationApp),
-            "Hello, World!"
-        );
+        emit TestCrosschainApp.MessageReceived(destination, address(destinationApp), "Hello, World!");
 
         environment.processNextPendingMessageFromDestination();
 
-        assertEq(
-            originApp.lastMessages(address(destinationApp)),
-            "Hello, World!"
-        );
+        assertEq(originApp.lastMessages(address(destinationApp)), "Hello, World!");
     }
 }

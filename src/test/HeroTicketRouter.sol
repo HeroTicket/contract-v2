@@ -32,17 +32,11 @@ contract HeroTicketRouter is Ownable, IRouter {
         return _nftRouters[_domain];
     }
 
-    function enrollRemoteRouter(
-        uint32 _domain,
-        bytes32 _router
-    ) external onlyOwner {
+    function enrollRemoteRouter(uint32 _domain, bytes32 _router) external onlyOwner {
         _enrollRemoteRouter(_domain, _router);
     }
 
-    function enrollRemoteRouters(
-        uint32[] calldata _domains,
-        bytes32[] calldata _routers
-    ) external onlyOwner {
+    function enrollRemoteRouters(uint32[] calldata _domains, bytes32[] calldata _routers) external onlyOwner {
         if (_domains.length != _routers.length) {
             revert Errors.InvalidInputLength();
         }
@@ -62,11 +56,7 @@ contract HeroTicketRouter is Ownable, IRouter {
         emit RemoteRouterEnroll(_domain, _router);
     }
 
-    function sendNft(
-        uint32 _domainId,
-        address _to,
-        string memory _tokenURI
-    ) external payable {
+    function sendNft(uint32 _domainId, address _to, string memory _tokenURI) external payable {
         bytes32 recipientAddress = _tryGetRecipientAddress(_domainId);
         bytes memory messageBody = abi.encode(_to, _tokenURI);
 
@@ -81,36 +71,25 @@ contract HeroTicketRouter is Ownable, IRouter {
         emit SendNft(_domainId, _to, _tokenURI);
     }
 
-    function _tryGetRecipientAddress(
-        uint32 _domainId
-    ) internal view returns (bytes32 recipientAddress) {
+    function _tryGetRecipientAddress(uint32 _domainId) internal view returns (bytes32 recipientAddress) {
         recipientAddress = _nftRouters[_domainId];
         if (recipientAddress == bytes32(0)) {
             revert Errors.RouterNotEnrolled(_domainId);
         }
     }
 
-    function estimateFee(
-        uint32 _domainId,
-        address _to,
-        string memory _tokenURI
-    ) external view returns (uint256) {
+    function estimateFee(uint32 _domainId, address _to, string memory _tokenURI) external view returns (uint256) {
         bytes32 recipientAddress = _tryGetRecipientAddress(_domainId);
         bytes memory messageBody = abi.encode(_to, _tokenURI);
 
         return _estimateFee(_domainId, recipientAddress, messageBody);
     }
 
-    function _estimateFee(
-        uint32 destinationDomain,
-        bytes32 recipientAddress,
-        bytes memory messageBody
-    ) internal view returns (uint256) {
-        return
-            IMailbox(MAILBOX).quoteDispatch(
-                destinationDomain,
-                recipientAddress,
-                messageBody
-            );
+    function _estimateFee(uint32 destinationDomain, bytes32 recipientAddress, bytes memory messageBody)
+        internal
+        view
+        returns (uint256)
+    {
+        return IMailbox(MAILBOX).quoteDispatch(destinationDomain, recipientAddress, messageBody);
     }
 }

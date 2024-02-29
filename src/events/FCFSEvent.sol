@@ -150,11 +150,7 @@ contract FCFSEvent is Event, IFCFSEvent, ERC721 {
      * @param tokenId uint256 ID of the ticket to transfer
      * @notice Transferred tickets are locked for 1 day
      */
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override {
+    function transferFrom(address from, address to, uint256 tokenId) public override {
         if (lockedUntil[tokenId] > block.timestamp) {
             revert TicketLocked();
         }
@@ -170,11 +166,7 @@ contract FCFSEvent is Event, IFCFSEvent, ERC721 {
      * @param tokenId uint256 ID of the ticket to transfer
      * @notice Transferred tickets are locked for 1 day
      */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override {
+    function safeTransferFrom(address from, address to, uint256 tokenId) public override {
         if (lockedUntil[tokenId] > block.timestamp) {
             revert TicketLocked();
         }

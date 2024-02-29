@@ -8,9 +8,7 @@ interface IRaffleEvent is IEventMetadata {
 
     // getters
     function applied(address _applicant) external view returns (bool);
-    function applicantNumber(
-        address _applicant
-    ) external view returns (uint256);
+    function applicantNumber(address _applicant) external view returns (uint256);
     function totalApplicants() external view returns (uint256);
     function lockedUntil(uint256 _tokenId) external view returns (uint32);
 

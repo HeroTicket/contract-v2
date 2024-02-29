@@ -66,10 +66,7 @@ contract HeroTicketRouter is IHeroTicketRouter, Ownable {
      * @param _router address of the remote router
      * @notice Only the owner can call this function
      */
-    function enrollRemoteRouter(
-        uint32 _domain,
-        bytes32 _router
-    ) external override onlyOwner {
+    function enrollRemoteRouter(uint32 _domain, bytes32 _router) external override onlyOwner {
         _enrollRemoteRouter(_domain, _router);
     }
 
@@ -79,10 +76,7 @@ contract HeroTicketRouter is IHeroTicketRouter, Ownable {
      * @param _routers array of addresses of the remote routers
      * @notice Only the owner can call this function
      */
-    function enrollRemoteRouters(
-        uint32[] calldata domains_,
-        bytes32[] calldata _routers
-    ) external override onlyOwner {
+    function enrollRemoteRouters(uint32[] calldata domains_, bytes32[] calldata _routers) external override onlyOwner {
         if (domains_.length != _routers.length) {
             revert Errors.InvalidInputLength();
         }
@@ -115,10 +109,7 @@ contract HeroTicketRouter is IHeroTicketRouter, Ownable {
      * @param _whitelisted bool to set the whitelisted status to
      * @notice Only the owner can call this function
      */
-    function setWhitelisted(
-        address _addr,
-        bool _whitelisted
-    ) external virtual onlyOwner {
+    function setWhitelisted(address _addr, bool _whitelisted) external virtual onlyOwner {
         whitelisted[_addr] = _whitelisted;
 
         emit Whitelist(_addr, _whitelisted);
@@ -185,12 +176,7 @@ contract HeroTicketRouter is IHeroTicketRouter, Ownable {
                 _eventEndAt
             );
         } else if (eventType == IEventMetadata.Type.FREE) {
-            _createFreeEvent(
-                _eventName,
-                _eventDescription,
-                _eventStartAt,
-                _eventEndAt
-            );
+            _createFreeEvent(_eventName, _eventDescription, _eventStartAt, _eventEndAt);
         } else {
             revert Errors.InvalidEventType(_eventType);
         }
@@ -339,18 +325,7 @@ contract HeroTicketRouter is IHeroTicketRouter, Ownable {
         Validations.mustGreaterThan(_eventEndAt, _eventStartAt);
 
         // Create the event
-        Event event_ = new Event(
-            msg.sender,
-            _eventName,
-            _eventDescription,
-            0,
-            0,
-            0,
-            0,
-            0,
-            _eventStartAt,
-            _eventEndAt
-        );
+        Event event_ = new Event(msg.sender, _eventName, _eventDescription, 0, 0, 0, 0, 0, _eventStartAt, _eventEndAt);
 
         address eventAddress = address(event_);
 
@@ -375,11 +350,7 @@ contract HeroTicketRouter is IHeroTicketRouter, Ownable {
      * @param _sender address of the sender
      * @param _message message body
      */
-    function handle(
-        uint32 _origin,
-        bytes32 _sender,
-        bytes calldata _message
-    ) external payable virtual {
+    function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable virtual {
         // TODO: Implement this function
     }
 }
