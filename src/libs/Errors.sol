@@ -11,4 +11,16 @@ library Errors {
     error RouterNotEnrolled(uint32 _domain);
     error NotWhitelisted();
     error InvalidEventType(uint8 _eventType);
+
+    error NotOnSale();
+    error SoldOut();
+    error OnlyOneTicketPerAddress();
+    error RefundNotAllowed();
+    error TicketLocked();
+    error AlreadyApplied();
+    error NotApplicable();
+    error InsufficientPayment();
+    error NotApplied();
+    error NotRefundable();
+    error HostCannotBuyTicket();
 }

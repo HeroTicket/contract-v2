@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.23;
 
-import {Event} from "./Event.sol";
+import {EventExtended} from "./EventExtended.sol";
 import {IRaffleEvent} from "./interfaces/IRaffleEvent.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "../libs/Errors.sol";
 
-contract RaffleEvent is Event, IRaffleEvent, ERC721 {
+contract RaffleEvent is EventExtended, IRaffleEvent, ERC721 {
     uint256 private _tokenId;
-    string private _ticketURI;
     mapping(uint256 => uint32) public lockedUntil;
 
     mapping(address => bool) public applied;
@@ -15,60 +15,43 @@ contract RaffleEvent is Event, IRaffleEvent, ERC721 {
     uint256 public totalApplicants;
     uint256 private _applicantId;
 
-    constructor(
-        address _host,
-        string memory _name,
-        string memory _symbol,
-        string memory description,
-        string memory ticketURI_,
-        uint256 _ticketPrice,
-        uint256 _maxTickets,
-        uint32 _saleStartAt,
-        uint32 _saleEndAt,
-        uint32 _drawAt,
-        uint32 _eventStartAt,
-        uint32 _eventEndAt
-    )
-        Event(
-            _host,
-            _name,
-            description,
-            _ticketPrice,
-            _maxTickets,
-            _saleStartAt,
-            _saleEndAt,
-            _drawAt,
-            _eventStartAt,
-            _eventEndAt
-        )
-        ERC721(_name, _symbol)
+    constructor(CreateEventExtendedParams memory _params, string memory _ticketName, string memory _ticketSymbol)
+        ERC721(_ticketName, _ticketSymbol)
     {
+        // TODO: validate params
         eventType = uint8(Type.RAFFLE);
-        _ticketURI = ticketURI_;
+        host = _params.host;
+        eventName = _params.eventName;
+        eventDescription = _params.eventDescription;
+        bannerURI = _params.bannerURI;
+        ticketURI = _params.ticketURI;
+        ticketPrice = _params.ticketPrice;
+        maxTickets = _params.maxTickets;
+        saleStartAt = _params.saleStartAt;
+        saleEndAt = _params.saleEndAt;
+        drawAt = _params.drawAt;
+        eventStartAt = _params.eventStartAt;
+        eventEndAt = _params.eventEndAt;
+        manager = msg.sender;
     }
 
     /**
      * @dev Enter the raffle directly by sending the ticket price
      * @notice The applicant must send the ether greater than or equal to the ticket price
-     */
-    function enter() public payable {
-        address _applicant = msg.sender;
-        uint256 value = msg.value;
-
-        if (value < ticketPrice) {
-            revert InsufficientPayment();
-        }
-
-        _addApplicant(_applicant);
-    }
-
-    /**
-     * @dev Add an applicant to the raffle
      * @param _applicant address of the applicant
-     * @notice Only the manager can add an applicant
+     * @param _method PaymentMethod enum
      */
-    function addApplicant(address _applicant) public onlyManager {
-        _addApplicant(_applicant);
+    function enter(address _applicant, PaymentMethod _method) public payable {
+        // TODO: implement method
+
+        // address _applicant = msg.sender;
+        // uint256 value = msg.value;
+
+        // if (value < ticketPrice) {
+        //     revert Errors.InsufficientPayment();
+        // }
+
+        // _addApplicant(_applicant);
     }
 
     /**
@@ -91,7 +74,7 @@ contract RaffleEvent is Event, IRaffleEvent, ERC721 {
     function _checkTicketSale() internal view {
         uint32 now_ = uint32(block.timestamp);
         if (now_ < saleStartAt || now_ > saleEndAt) {
-            revert NotOnSale();
+            revert Errors.NotOnSale();
         }
     }
 
@@ -101,7 +84,7 @@ contract RaffleEvent is Event, IRaffleEvent, ERC721 {
      */
     function _checkApplied(address _applicant) internal view {
         if (applied[_applicant]) {
-            revert AlreadyApplied();
+            revert Errors.AlreadyApplied();
         }
     }
 
@@ -122,13 +105,13 @@ contract RaffleEvent is Event, IRaffleEvent, ERC721 {
      */
     function removeApplicant(address _applicant) public onlyManager {
         if (!applied[_applicant]) {
-            revert NotApplied();
+            revert Errors.NotApplied();
         }
 
         uint32 now_ = uint32(block.timestamp);
 
         if (now_ < saleStartAt || now_ > saleEndAt) {
-            revert NotRefundable();
+            revert Errors.NotRefundable();
         }
 
         applied[_applicant] = false;
@@ -145,7 +128,7 @@ contract RaffleEvent is Event, IRaffleEvent, ERC721 {
      */
     function transferFrom(address from, address to, uint256 tokenId) public override {
         if (lockedUntil[tokenId] > block.timestamp) {
-            revert TicketLocked();
+            revert Errors.TicketLocked();
         }
 
         lockedUntil[tokenId] = uint32(block.timestamp + 1 days);
@@ -161,7 +144,7 @@ contract RaffleEvent is Event, IRaffleEvent, ERC721 {
      */
     function safeTransferFrom(address from, address to, uint256 tokenId) public override {
         if (lockedUntil[tokenId] > block.timestamp) {
-            revert TicketLocked();
+            revert Errors.TicketLocked();
         }
 
         lockedUntil[tokenId] = uint32(block.timestamp + 1 days);
@@ -173,6 +156,6 @@ contract RaffleEvent is Event, IRaffleEvent, ERC721 {
      * @return string memory
      */
     function _baseURI() internal view override returns (string memory) {
-        return _ticketURI;
+        return ticketURI;
     }
 }

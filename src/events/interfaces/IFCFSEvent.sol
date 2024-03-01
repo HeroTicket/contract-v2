@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.23;
 
-import "./IEventMetadata.sol";
+import "./IEventExtended.sol";
 
-interface IFCFSEvent is IEventMetadata {
-    // getters
-    function lockedUntil(uint256 _tokenId) external view returns (uint32);
+interface IFCFSEvent is IEventExtended {
+    // event
+    event TicketSold(address indexed buyer, uint256 indexed tokenId, PaymentMethod method);
 
-    // direct interaction
-    function buyTicket() external payable;
+    // fcfs event methods
+    function buyTicket(address buyer, PaymentMethod method) external payable;
 
-    // cross-chain functionality through manager
-    function issueTicket(address _to) external;
+    // is refundability required?
 }
