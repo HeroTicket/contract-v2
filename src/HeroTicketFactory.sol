@@ -5,7 +5,6 @@ import {IEvent} from "./events/interfaces/IEvent.sol";
 import {IEventExtended} from "./events/interfaces/IEventExtended.sol";
 import {Event} from "./events/Event.sol";
 import {FCFSEvent} from "./events/FCFSEvent.sol";
-import {RaffleEvent} from "./events/RaffleEvent.sol";
 import {IHeroTicketFactory} from "./interfaces/IHeroTicketFactory.sol";
 import {Validations} from "./libs/Validations.sol";
 import {Errors} from "./libs/Errors.sol";

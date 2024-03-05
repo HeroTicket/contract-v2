@@ -8,7 +8,7 @@ interface IFCFSEvent is IEventExtended {
     event TicketSold(address indexed buyer, uint256 indexed tokenId, PaymentMethod method);
 
     // fcfs event methods
+    function paymentToken() external view returns (address);
     function buyTicket(address buyer, PaymentMethod method) external payable;
-
-    // is refundability required?
+    function claimSettlement(address to) external;
 }

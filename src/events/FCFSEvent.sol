@@ -2,27 +2,33 @@
 pragma solidity ^0.8.23;
 
 import {EventExtended} from "./EventExtended.sol";
+import {EventManagement} from "./EventManagement.sol";
 import {IFCFSEvent} from "./interfaces/IFCFSEvent.sol";
+import {IEventLock} from "./interfaces/IEventLock.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "../libs/Errors.sol";
 
-contract FCFSEvent is EventExtended, IFCFSEvent, ERC721 {
+contract FCFSEvent is EventExtended, IFCFSEvent, IEventLock, ERC721 {
+    uint256 public constant SETTLEMENT_LOCK_PERIOD = 3 days;
+
+    address private _paymentToken;
     uint256 private _tokenId;
     uint256 private _issuedTickets;
+
+    mapping(uint256 => uint64) public override ticketLockedUntil;
 
     /**
      * @dev Constructor for the FCFSEvent contract
      * @param _params CreateEventParams struct
-     * @param _ticketName ERC721 ticket name
-     * @param _ticketSymbol ERC721 ticket symbol
      */
-    constructor(CreateEventExtendedParams memory _params, string memory _ticketName, string memory _ticketSymbol)
-        ERC721(_ticketName, _ticketSymbol)
+    constructor(address _host, address paymentToken_, CreateEventExtendedParams memory _params)
+        EventManagement(_host, msg.sender)
+        ERC721(_params.eventName, _params.eventSymbol)
     {
         // TODO: validate params
 
         eventType = uint8(Type.FCFS);
-        host = _params.host;
         eventName = _params.eventName;
         eventDescription = _params.eventDescription;
         bannerURI = _params.bannerURI;
@@ -31,10 +37,17 @@ contract FCFSEvent is EventExtended, IFCFSEvent, ERC721 {
         maxTickets = _params.maxTickets;
         saleStartAt = _params.saleStartAt;
         saleEndAt = _params.saleEndAt;
-        drawAt = _params.drawAt;
         eventStartAt = _params.eventStartAt;
         eventEndAt = _params.eventEndAt;
-        manager = msg.sender;
+        _paymentToken = paymentToken_;
+    }
+
+    /**
+     * @dev Return the payment token address
+     * @return address
+     */
+    function paymentToken() external view override returns (address) {
+        return _paymentToken;
     }
 
     /**
@@ -52,6 +65,10 @@ contract FCFSEvent is EventExtended, IFCFSEvent, ERC721 {
         // }
 
         // _mintTicket(msg.sender);
+    }
+
+    function claimSettlement(address to) external {
+        // TODO: implement method
     }
 
     /**
@@ -98,7 +115,7 @@ contract FCFSEvent is EventExtended, IFCFSEvent, ERC721 {
             revert Errors.ZeroAddress();
         }
 
-        if (_to == host) {
+        if (_to == host()) {
             revert Errors.HostCannotBuyTicket();
         }
     }
@@ -121,7 +138,7 @@ contract FCFSEvent is EventExtended, IFCFSEvent, ERC721 {
      * @param tokenId uint256 ID of the ticket to transfer
      * @notice Transferred tickets are locked for 1 day
      */
-    function transferFrom(address from, address to, uint256 tokenId) public override {
+    function transferFrom(address from, address to, uint256 tokenId) public override(IERC721, ERC721) {
         if (ticketLockedUntil[tokenId] > block.timestamp) {
             revert Errors.TicketLocked();
         }
@@ -137,7 +154,7 @@ contract FCFSEvent is EventExtended, IFCFSEvent, ERC721 {
      * @param tokenId uint256 ID of the ticket to transfer
      * @notice Transferred tickets are locked for 1 day
      */
-    function safeTransferFrom(address from, address to, uint256 tokenId) public override {
+    function safeTransferFrom(address from, address to, uint256 tokenId) public override(IERC721, ERC721) {
         if (ticketLockedUntil[tokenId] > block.timestamp) {
             revert Errors.TicketLocked();
         }
