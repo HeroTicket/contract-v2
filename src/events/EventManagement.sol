@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.23;
 
-abstract contract EventManagement {
-    error OnlyManager();
-    error OnlyHost();
-    error OnlyManagerOrHost();
+import {IEventManagement} from "./interfaces/IEventManagement.sol";
 
-    address private _manager;
+abstract contract EventManagement is IEventManagement {
+    error OnlyFactory();
+    error OnlyHost();
+    error OnlyFactoryOrHost();
+
+    address private _factory;
     address private _host;
 
-    modifier onlyManager() {
-        if (msg.sender != _manager) {
-            revert OnlyManager();
+    modifier onlyFactory() {
+        if (msg.sender != _factory) {
+            revert OnlyFactory();
         }
         _;
     }
@@ -23,28 +25,28 @@ abstract contract EventManagement {
         _;
     }
 
-    modifier onlyManagerOrHost() {
-        if (msg.sender != _manager && msg.sender != _host) {
-            revert OnlyManagerOrHost();
+    modifier onlyFactoryOrHost() {
+        if (msg.sender != _factory && msg.sender != _host) {
+            revert OnlyFactoryOrHost();
         }
         _;
     }
 
-    constructor(address manager_, address host_) {
-        if (manager_ == address(0)) {
-            revert("EventManagement: manager is the zero address");
+    constructor(address factory_, address host_) {
+        if (factory_ == address(0)) {
+            revert("EventManagement: factory is the zero address");
         }
 
         if (host_ == address(0)) {
             revert("EventManagement: host is the zero address");
         }
 
-        _manager = manager_;
+        _factory = factory_;
         _host = host_;
     }
 
-    function manager() public view returns (address) {
-        return _manager;
+    function factory() public view returns (address) {
+        return _factory;
     }
 
     function host() public view returns (address) {

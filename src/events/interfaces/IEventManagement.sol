@@ -2,6 +2,6 @@
 pragma solidity ^0.8.23;
 
 interface IEventManagement {
-    function manager() external view returns (address);
+    function factory() external view returns (address);
     function host() external view returns (address);
 }

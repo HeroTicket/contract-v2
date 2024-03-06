@@ -21,7 +21,7 @@ interface IEvent {
     }
 
     // event
-    event EventCreated(address indexed eventAddress);
+    event EventCreation(address indexed eventAddress, address indexed host);
 
     // event metadata
     function eventType() external view returns (uint8);

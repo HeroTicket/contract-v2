@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.23;
 
-import {EventExtended} from "./EventExtended.sol";
+import {IEvent, IEventExtended} from "./interfaces/IEventExtended.sol";
 import {EventManagement} from "./EventManagement.sol";
 import {IFCFSEvent} from "./interfaces/IFCFSEvent.sol";
 import {IEventLock} from "./interfaces/IEventLock.sol";
@@ -9,8 +9,20 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "../libs/Errors.sol";
 
-contract FCFSEvent is EventExtended, IFCFSEvent, IEventLock, ERC721 {
+contract FCFSEvent is IEventExtended, IFCFSEvent, IEventLock, EventManagement, ERC721 {
     uint256 public constant SETTLEMENT_LOCK_PERIOD = 3 days;
+
+    uint8 public override eventType;
+    string public override eventName;
+    string public override eventDescription;
+    string public override bannerURI;
+    uint64 public override saleStartAt;
+    uint64 public override saleEndAt;
+    uint64 public override eventStartAt;
+    uint64 public override eventEndAt;
+    string public override ticketURI;
+    uint256 public override ticketPrice;
+    uint256 public override maxTickets;
 
     address private _paymentToken;
     uint256 private _tokenId;
@@ -23,7 +35,7 @@ contract FCFSEvent is EventExtended, IFCFSEvent, IEventLock, ERC721 {
      * @param _params CreateEventParams struct
      */
     constructor(address _host, address paymentToken_, CreateEventExtendedParams memory _params)
-        EventManagement(_host, msg.sender)
+        EventManagement(msg.sender, _host)
         ERC721(_params.eventName, _params.eventSymbol)
     {
         // TODO: validate params
